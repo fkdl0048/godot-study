@@ -1,0 +1,16 @@
+[gd_resource type="ShaderMaterial" load_steps=4 format=3 uid="uid://bhf6kwdlc7f5h"]
+
+[ext_resource type="Shader" path="res://enemies/red_robot/laser/smoke.gdshader" id="1_j0r3f"]
+
+[sub_resource type="FastNoiseLite" id="29"]
+
+[sub_resource type="NoiseTexture2D" id="30"]
+width = 64
+height = 64
+seamless = true
+noise = SubResource("29")
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_j0r3f")
+shader_parameter/noise_texture = SubResource("30")

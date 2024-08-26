@@ -1,21 +1,67 @@
-# Godot_Study
+# Third Person Shooter Demo
 
-Godot 엔진을 공부하기 위한 스터디
+Third person shooter demo made using [Godot Engine](https://godotengine.org).
 
-## What?
+Check out this demo on the asset library: https://godotengine.org/asset-library/asset/678
 
-오픈소스 게임 엔진으로 자세한 내용은 [공식 홈페이지](https://godotengine.org/)를 참고.
+![Screenshot of TPS demo](screenshots/screenshot.png)
 
-좀 더 계획적인 공부를 위해 주마다 Task를 정하고 실천
+## Godot versions
 
-## Why?
+- The [`master`](https://github.com/godotengine/tps-demo) branch is compatible with the latest stable Godot version (currently 4.x).
+- If you are using an older version of Godot, use the appropriate branch for your Godot version:
 
-유니티만 사용하는 것이 아닌 언리얼, 고도엔진에 대한 경험과 생각을 정리하여 나름대로의 장단점을 알고자함.
+  - [`3.x`](https://github.com/godotengine/tps-demo/tree/3.x) branch
+  for Godot 3.4.x and 3.5.x.
+  - [`3.3`](https://github.com/godotengine/tps-demo/tree/3.3) branch
+  for Godot 3.3.x.
+  - [`3.2`](https://github.com/godotengine/tps-demo/tree/3.2) branch
+  for Godot 3.2.2 or 3.2.3.
+  - [`3.2.1`](https://github.com/godotengine/tps-demo/tree/3.2.1) branch
+  for Godot 3.2.0 or 3.2.1.
+  - [`3.1`](https://github.com/godotengine/tps-demo/tree/3.1) branch
+  for Godot 3.1.x.
 
-그 중에서 고도엔진이 가장 궁금하고 실제 제작과정을 따라가볼려고 한다.
+> **Note**
+>
+> The repository is big, so expect a high wait time when opening the project for
+> the first time.
 
-## How?
+## Git LFS
 
-주 마다 약 3시간 정도의 분량의 Task를 생성하고 실천하는 방향으로
+Git LFS is no longer required for the current `master` or `3.x` branches.
 
-어느정도 익숙해진다면 실제 사이드 프로젝트로 마무리할 예정
+You only need Git LFS if you are checking out the `3.1` or `3.2.1` branches.
+Those branches have instructions for Git LFS in their README files.
+
+## Running
+
+You need [Godot Engine](https://godotengine.org) to run this demo project.
+Download the latest stable version [from the website](https://godotengine.org/download/),
+or [build it from source](https://github.com/godotengine/godot).
+
+You can either download from the Godot Asset Library, clone this repository, or
+[download a ZIP archive](https://github.com/godotengine/tps-demo/archive/master.zip).
+
+## Controls
+
+- Mouse or <kbd>Gamepad Right Stick</kbd>: Look around
+- <kbd>W</kbd>/<kbd>A</kbd>/<kbd>S</kbd>/<kbd>D</kbd>, <kbd>Arrow keys</kbd>, <kbd>Gamepad Left Analog Stick</kbd> or <kbd>Gamepad D-Pad</kbd>: Move
+- <kbd>Space</kbd>, <kbd>Gamepad A/Cross</kbd>: Jump
+- <kbd>Right Mouse Button</kbd>, <kbd>Gamepad Left Trigger (L2)</kbd> (press to toggle, or hold and release): Aim
+- <kbd>Left Mouse Button</kbd>, <kbd>Gamepad Right Trigger (R2)</kbd>: Shoot (only while aiming)
+- <kbd>Escape</kbd>, <kbd>Gamepad Start</kbd>: Go to main menu/quit
+- <kbd>F11</kbd> or <kbd>Alt + Enter</kbd>: Toggle fullscreen
+- <kbd>F3</kbd>: Toggle debugging information (such as FPS counter)
+
+## Useful links
+
+- [Main website](https://godotengine.org)
+- [Source code](https://github.com/godotengine/godot)
+- [Documentation](http://docs.godotengine.org)
+- [Community hub](https://godotengine.org/community)
+- [Other demos](https://github.com/godotengine/godot-demo-projects)
+
+## License
+
+See [LICENSE.md](LICENSE.md) for details.

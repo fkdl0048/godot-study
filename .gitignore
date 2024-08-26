@@ -1,7 +1,3 @@
-# Created by https://www.toptal.com/developers/gitignore/api/godot
-# Edit at https://www.toptal.com/developers/gitignore?templates=godot
-
-### Godot ###
 # Godot 4+ specific ignores
 .godot/
 
@@ -18,4 +14,10 @@ export_presets.cfg
 data_*/
 mono_crash.*.json
 
-# End of https://www.toptal.com/developers/gitignore/api/godot
+# System/tool-specific ignores
+.directory
+.DS_Store
+*~
+
+# Blender versioning
+*.blend[0-9]*

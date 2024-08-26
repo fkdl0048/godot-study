@@ -402,7 +402,120 @@ UI용 기본 노드는 모두 `Control`에서 확장되며 노드 목록에서�
 
 #### 점수 및 시간 표시 개요
 
-HUD 상단에는 플레이어의 점수와 시계에 남은 시간이 표시된다. 둘 다 Label 노드이며, 게임 화면에서 맞은편에 배치된다. 둘의 위치를 별도로 잡는 대신 컨테이너(Container)노드를 사용해 위치를 관리한다.
+HUD 상단에는 플레이어의 점수와 시계에 남은 시간이 표시된다. 둘 다 Label 노드이며, 게임 화면에서 맞은편에 배치된다. 둘의 위치를 별도로 잡는 대신 **컨테이너(Container)노드**를 사용해 위치를 관리한다.
+
+##### 컨테이너
+
+고도의 `Container`노드는 자식 `Control`노드의 위치와 크기를 자동으로 정렬한다. 이를 사용해 요소 주위에 가장자리를 추가하거나, 중앙 정렬을 유지하거나, 행과 열로 정렬할 수 있다. 각 `Container`유형에는 자식의 정렬 방식을 제어하는 특수 속성이 있다.
+
+컨테이너는 자동으로 자식을 정렬한다는 점을 기억하자. Container 노드 안에 있는 `Control`을 이동하거나 크기 조정을 하려고 하면 에디터에 경고가 표시될 것이다.
+
+#### 점수 및 시간 표시 구현
+
+점수 및 레이블을 관리하기 위해 HUD에 `MarginContainer` 노드를 추가한다.
+
+- 앵커 프리셋에서 앵커를 위쪽 넓게로 설정한다.
+- 인스펙터 창의 Theme Overrides/Constant 섹션에서 Margin 속성 4개를 10으로 설정한다.
+- Label을 MarginContainer의 자식으로 추가한다. (score, time)
+- 각각 알맞은 위치로 정렬한다.
+
+#### GDScript를 통한 UI 업데이트
+
+HUD 노드에 스크립트를 추가한다. 이 스크립트는 동전을 모을 때마다 `Score` 텍스트를 업데이트 하는 등 속성을 변경해야 할 UI 요소를 업데이트한다.
+
+```gd
+extends CanvasLayer
+
+signal start_game
+
+func update_score(value):
+	$MarginContainer/Score.text = str(value)
+	
+func update_timer(value):
+	$MarginContainer/Time.text = str(value)
+```
+
+`Main`씬의 스크립트는 값이 변화할 때마다 이 두 함수를 호출해 표시된 내용을 업데이트할 것이다. Message 레이블이 조금 지나면 사라지도록 타이머도 필요하다.
+
+`Timer`노드를 `HUD`자식으로 추가하고 Wait Time을 2초, One Shot을 사용으로 설정한다. 이렇게 하면 타이머가 시작될 때 한 번만 실행되고 반복되지 않을 것이다. *시그널 연결*
+
+```gd
+func show_message(text):
+	$Message.text = text
+	$Message.show()
+	$Timer.start()
+
+func _on_timer_timeout():
+	$Message.hide()
+```
+
+##### 버튼 사용
+
+`Button` 노드를 `HUD`에 추가하고 이름을 `StartButton`으로 바꾼다. 이 버튼은 게임이 시작되기 전에 표시되며, 클릭하면 사라지면서 `Main`씬에 게임을 시작하라는 시그널을 보낸다.
+
+```gd
+func _on_start_button_pressed():
+	$StartButton.hide()
+	$Message.hide()
+	start_game.emit()
+```
+
+#### 게임 오버
+
+UI 스크립트의 마지막 작업은 게임 종료에 반응하는 것이다.
+
+```gd
+func show_game_over():
+	show_message("Game Over")
+	await $Timer.timeout
+	$StartButton.show()
+	$Message.text = "Coin Dash!"
+	$Message.show()
+```
+
+#### 메인에 HUD 추가
+
+Main에 HUD 인스턴스를 추가하여 연결한다.
+
+### 5단계: 마무리
+
+게임 개발자는 게임을 플레이하는 느낌을 좋게 만드는 요소를 묘사할 때 주스라는 용어를 사용한다. 주스에는 사운드, 비주얼 이펙트, 그 밖에 게임 플레이의 본질을 바꾸지 않으면서 플레이의 즐거움을 더하는 온갖 추가 요소를 포함한다.
+
+#### 비주얼이펙트
+
+#### 트윈이란?
+
+트윈은 특정 수학 함수를 사용해 어떤 값을 시간에 따라 보간하는 방법이다.
+
+고도에선 트윈을 사용할 때는, 노드의 속성을 1개 이상 변경하게 할당할 수 있다. 이번 경우에는 동전의 크기를 키웠다가 **Modulate**속성을 사용해 동전을 페이드아웃할 것이다. 트윈이 역할을 다하면 동전은 삭제된다.
+
+- 조건중 동전을 즉시 제거하지 않으면 2번이상 트리거가 되기에 조건을 달아 방지해야 한다.
+
+```gd
+func pickup():
+	$CollisionShape2D.set_deferred("disabled", true)
+	var tw = create_tween().set_parallel().set_trans(Tween.TRANS_QUAD)
+	tw.tween_property(self, "scale", scale * 3, 0.3)
+	tw.tween_property(self, "modulate:a", 0.0, 0.3)
+	await tw.finished
+	queue_free()
+```
+
+이와 같이 수정되어야 한다.
+
+먼저 `CollisionShape2D`의 `disabled`속성을 `true`로 변경해야 할 필요가 있지만, 바로 설정하면 고도엔진에서 경고를 준다. 이는 콜리전이 처리되는 동안 물리 속성을 변경할 수 없기 때문이다. 따라서 `free_queue()`와 같이 현재 프레임이 끝날 때 까지 기다려야 한다. 이 역할을 하는 것이 `set_deferred()`이다.
+
+다음 줄의 `create_tween()`은 트윈 오브젝트를 생성하고, `set_parallel()`은 다음 트윈 순서를 순차적이 아니라 동시에 발생하게 하며, `set_trans()`는 전환 함수를 '2차 곡선`으로 설정한다.
+
+다음에 오는 2줄은 속성의 트위닝을 설정한다. `tween_property()`는 매개변수를 4개 받는데, 각각 영향을 줄 오브젝트, 변경할 속성, 종료값, 지속 시간이다.
+
+#### 사운드
+
+`Main`씬에 `AudioStreamPlayer`노드를 추가하고 이름을 각각 이펙트에 맞게 변경한 뒤 알맞는 사운드를 `Stream`속성에 넣는다. 이후 `Play()`함수를 호출하여 사운드를 재생한다.
+
+#### 파워업
+
+코인과 비슷한 기능을 하는 파워업은 유니티의 프리팹과 같이 코인씬을 복사하여 활용할 수 있다.
 
 ### 느낀점
 

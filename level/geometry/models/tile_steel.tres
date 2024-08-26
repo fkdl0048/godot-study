@@ -1,0 +1,6 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://cusvgibyf81nn"]
+
+[resource]
+resource_name = "tile_steel"
+metallic = 1.0
+texture_filter = 5

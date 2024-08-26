@@ -1,0 +1,33 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3 uid="uid://2derncr82ntu"]
+
+[ext_resource type="Texture2D" uid="uid://mynyixl3f55g" path="res://level/textures/structure/light_shafts.png" id="1"]
+
+[sub_resource type="Shader" id="1"]
+code = "shader_type spatial;
+
+render_mode unshaded,depth_draw_never;
+
+uniform sampler2D tex;
+uniform vec4 color : source_color;
+uniform float max_dist = 2.0;
+uniform float min_dist = 5.0;
+uniform float curve = 1.0;
+uniform float dp_curve = 1.0;
+void fragment() {
+	float transparency = texture(tex,UV).r;
+	float dp = pow(max(0.0,dot(NORMAL,vec3(0.0,0.0,0.1))),dp_curve);
+	dp*=smoothstep(-VERTEX.z,max_dist,min_dist);
+	ALBEDO = color.rgb;
+	ALPHA = pow(transparency,curve) * color.a * dp;
+	//ALBEDO = NORMAL;
+}"
+
+[resource]
+render_priority = 0
+shader = SubResource("1")
+shader_parameter/color = Color(1, 1, 1, 0.223529)
+shader_parameter/max_dist = 2.0
+shader_parameter/min_dist = 5.0
+shader_parameter/curve = 5.87
+shader_parameter/dp_curve = 0.56
+shader_parameter/tex = ExtResource("1")
