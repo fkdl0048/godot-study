@@ -416,3 +416,303 @@ func set_lives(value):
 
 `lives`변수에 **세터**라는 것을 추가하여 `lives`값이 변경될 때마다 `set_lives`함수가 호출된다는 뜻이다. 해당 함수에 시그널을 연결하면 자동으로 시그널을 발생시킬 수 있다.
 
+```gd
+func reset():
+	reset_pos = true
+	$Sprite2D.show()
+	lives = 3
+	Change_state(ALIVE)
+```
+
+새로운 게임이 시작될 때 Main에서 호출할 player의 함수이다. 플레이어의 상태를 초기화하기에 위치도 초기화 시켜야 하기에 `_integrate_forces`에서 위치를 초기화한다.
+
+```gd
+	if reset_pos:
+		physics_state.transform.origin = screensize / 2
+		reset_pos = false
+```
+
+시그널을 생성하고 해당 함수랑 연결하는 법은 꼭 생성하고 네이밍을 맞출필요 없이 씬탭에서 해당 씬의 시그널을 연결해서 사용할 수 있다.
+
+### 게임 종료
+
+플레이어가 바위에 부딪히는 것을 감지하기 위해 `Explosion`씬의 인스턴스를 `Player`에 추가하고 `visible`을 `false`로 설정한다. 이후에 Timer을 추가하여 이를 제어할 타이머를 만든다.
+
+```gd
+func Change_state(new_state):
+	match new_state:
+		INIT:
+			$CollisionShape2D.set_deferred("disabled", true)
+			$Sprite2D.modulate.a = 0.5
+		ALIVE:
+			$CollisionShape2D.set_deferred("disabled", false)
+			$Sprite2D.modulate.a = 1.0
+		INVULNERABLE:
+			$CollisionShape2D.set_deferred("disabled", true)
+			$Sprite2D.modulate.a = 0.5
+			$InvulnerabilityTimer.start()
+		DEAD:
+			$CollisionShape2D.set_deferred("disabled", true)
+			$Sprite2D.hide()
+			linear_velocity = Vector2.ZERO
+			dead.emit()
+	state = new_state
+```
+
+FSM을 다음과 같이 업데이트한다.
+
+```gd
+func _on_invulnerability_timer_timeout() -> void:
+	Change_state(ALIVE)
+```
+
+`INVULNERABLE`에서 실행한 타이머가 끝나면 `ALIVE`로 상태를 변경한다.
+
+#### 리지드 바디 사이의 콜리전 감지
+
+현재 우주선이 바위애 튕기는 이유는 둘 다 리지드 바디이기 때문이다. 하지만 리지드 바디가 충돌할 때 뭔가 일어나게 하고 싶다면 **접촉 모니터링(contact monitoring)**을 사용해야 한다.
+
+사용하고 싶은 노드(RigidBody2D)에 `contact_monitor`를 체크하고 `Max contacts report`를 1로 설정한다. 이렇게 설정하면 플레이어가 다른 바디와 접촉할 때 시그널을 발산할 것이다. 노드의 `body_entered`시그널을 연결하고 다음 코드를 작성한다.
+
+```gd
+func _on_body_entered(body: Node) -> void:
+	if body.is_in_group("rocks"):
+		body.explode()
+		lives -= 1
+		explode() # Replace with function body.
+
+func explode() -> void:
+	$Explosion.show()
+	$Explosion/AnimationPlayer.play("explosion")
+	await $Explosion/AnimationPlayer.animation_finished
+	$Explosion.hide()
+```
+
+### 게임 일시 정지
+
+고도에서 일시 정지는 Scene Tree의 함수이며, paused 속성을 사용해 설정할 수 있다. 이를 통해 일시 정지하게 되면 다음과 같은 일이 발생한다.
+
+- 물리 스레드 실행 중지
+- `_process`와 `_physics_process`가 어떤 노드에서도 호출되지 않음
+- `_input`과 `_input_event`메서드 역시 입력이 있어도 호출되지 않음
+
+일시 정지 모드가 트리거되면 실행 중인 게임의 모든 노드가 설정한 방식에 따라 반응한다. 이 행동은 노드 인스펙터 목록 하단에서 볼 수 있는 Process/Mode 속성을 통해 설정한다.
+
+- `Ingerit`: 해당 노드가 부모와 동일한 모드를 사용한다.
+- `Pausable`: 씬 트리가 일시 정지되면 해당 노드도 일시 정지
+- `When Paused`: 해당 노드는 트리가 일시 정지된 경우에만 실행
+- `Always`: 해당 노드는 항상 실행되며, 트리의 일시 정지 상태는 무시
+- `Disabled`: 해당 노드는 항상 실행되지 않으며, 트리의 일시 정지 상태는 무시
+
+*일시정지도 이렇게 미리 생각해놓고 구현해놨다니.. 매우 편리하다.*
+
+이에 따라 일시 정지를 구현하기 위해 입력 맵에서 일시정지 액션을 만들고 이에 대한 처리를 한다.
+
+```gd
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("pause"):
+		if not playing:
+			return
+		get_tree().paused = not get_tree().paused
+		var message = $HUD/VBoxContainer/Message
+		if get_tree().paused:
+			message.text = "Paused"
+			message.show()
+		else:
+			message.text = ""
+			message.hide()
+```
+
+이 코드는 키를 누르른 것을 감지해 트리의 상태가 현재 상태와 반대되는 상태로 전환되게 설정한다.
+
+그런데 지금 게임을 실행하면 문제가 하나 더 있다. 모든 노드가 일시 정지되고 거기에는 `Main`도 포함되기 때문에 더이상 `_input`을 처리하지 않게되기에 Main노드의 Process/Mode를 `Always`로 설정해야 한다.
+
+*추가로 Main에 할당된 Player도 `Inherit`이기 때문에 `Pausable`로 변경해야 한다. 현재는 총알이 멈춘 상태로 나가는 문제가 있다.*
+
+### 적
+
+#### 경로 따라가기
+
+새 씬을 생성하고 `Node`를 추가한다. 이름은 `EnemyPaths`로 변경하고 경로를 그리기 위해 `Path2D`를 추가한다. 해당 Path에 여러 점을 추가하여 경로를 만든다. (경로 자체가 하나의 씬이자 객체, 인스턴스로 동작)
+
+#### 적 씬
+
+적을 위한 `Area2D`를 루트 노드로 사용한다. 이후 적에 맞는 애니메이션을 할당하고 `Explosion`씬을 인스턴스로 추가한다. 발사에 맞는 타이머도 추가하여 설정한다.
+
+#### 적 이동
+
+```gd
+@export var bullet_scene : PackedScene
+@export var speed = 150
+@export var rotatio_speed = 120
+@export var health = 3
+
+var follow = PathFollow2D.new()
+var target = null
+
+func _ready() -> void:
+	$Sprite2D.frame = randi() % 3
+	var path = $EnemyPaths.get_children()[randi() % $EnemyPaths.get_child_count()]
+	path.add_child(follow)
+	follow.loop = false
+```
+
+시작 단계에서 스프라이트를 랜덤으로 선택하고 path도 랜덤으로 선택한다. 이후 해당 경로를 loop로 설정한다. 다음 단계는 경로 끝에 도달할 적을 제거하는 것이다.
+
+```gd
+func _physics_process(delta: float) -> void:
+	rotation += deg_to_rad(rotation_speed) * delta
+	follow.progress += speed * delta
+	position = follow.global_position
+	if follow.progress_ratio >= 1:
+		queue_free()
+```
+
+경로의 끝은 `progress`가 전체 경로 길이보다 클 때 감지할 수 있다. 하지만 `progress_ratio`를 사용하는 편이 더 직관적인데, 이 변수는 경로 길이에 따라 0에서 1까지 변하므로 경로의 길이를 일일이 알 필요가 없기 때문이다.
+
+#### 적 스폰
+
+`Main`씬에 제작한 Enemy씬을 인스턴스로 가질 수 있도록 만든다. 이후 해당 씬을 생성하는 로직을 `new_level`함수에 추가한다. 이후 Timer 함수를 연결하여 지속적으로 생성될 수 있도록 한다.
+
+```gd
+func _on_enemy_timer_timeout() -> void:
+	var e = enemy_scene.instantiate()
+	add_child(e)
+	e.target = $Player
+	$EnemyTimer.start(randf_range(20, 40))
+```
+
+#### 적 사격 및 충돌
+
+적은 플레이어에게 총을 쏘고 플레이어의 총알에 맞았을 때 반응해야 한다. 이를 위해 새로 총알을 제작하거나 플레이어의 총알을 사용하여 제작할 수 있다.
+
+복사하여 사용하는 경우에는 특히 루트 노드의 이름 변경, 스크립트 떼기, 연결된 시그널 제거, 그룹 제거 등을 해야한다.
+
+```gd
+extends Area2D
+
+@export var speed = 1000
+
+func start(_pos, _dir):
+	position = _pos
+	rotation = _dir.angle()
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	position += transform.x * speed * delta
+
+func _on_body_entered(body: Node2D) -> void:
+	queue_free()
+
+func _on_visible_on_screen_notifier_2d_screen_exited() -> void:
+	queue_free()
+```
+
+이렇게 기본적인 총알을 제작하고 플레이어를 향해 발사하도록 설정한다. `enemy_bullet`씬을 저장하고 `Enemy`씬에 설정해둔 속성인 Bullet Scene에 연결한다.
+
+```gd
+func shoot():
+	var dir = global_position.direction_to(target.global_position)
+	dir = dir.rotated(randf_range(-bullet_spread, bullet_spread))
+	var b = bullet_scene.instantiate()
+	get_tree().root.add_child(b)
+	b.start(global_position, dir)
+```
+
+플레이어 위치를 찾은 후 랜덤성을 주고 총알을 발사한다. `GunCooldown` 시간이 초과될 때마다 `shoot`함수를 호출한다.
+
+```gd
+func take_damage(amount):
+	health -= amount
+	$AnimationPlayer.play("flash")
+	if health <= 0:
+		explode()
+
+func explode():
+	speed = 0
+	$GunCooldown.stop()
+	$CollisionShape2D.set_deferred("disabled", true)
+	$Sprite2D.hide()
+	$Explosion.show()
+	$Explosion/AnimationPlayer.play("explosion")
+	await $Explosion/AnimationPlayer.animation_finished
+	queue_free()
+```
+
+또한 적의 `body_entered`시그널을 연결해서 적이 플레이어와 부딪히면 폭발하게 한다.
+
+```gd
+func _on_enemy_timer_timeout() -> void:
+	var e = enemy_scene.instantiate()
+	add_child(e)
+	e.target = $Player
+	$EnemyTimer.start(randf_range(20, 40))
+```
+
+추가로 총알은 현재 `Node`의 Enter만 감지하고 있기에 `Area2D`로 추가해야 한다.
+
+### 플레이어 보호막
+
+```gd
+func set_shield(value):
+	value = min(value, max_shield)
+	shield = value
+	shield_changed.emit(shield / max_shield)
+	if shield <= 0:
+		lives -= 1
+		explode()
+```
+
+실드값이 변경될 때 마다 호출될 (세터로 연결) 함수로 최대값을 제한하고 HUD로 보낼 시그널에 맞게 메시지지를 보낸다. 이후 실드가 다 달면 생명을 줄인다.
+
+```gd
+func _on_body_entered(body: Node) -> void:
+	if body.is_in_group("rocks"):
+		shield -= body.size * 25
+		body.explode()
+```
+
+실드에 맞게 바위 크기에 따라 데미지를 주고 바위를 폭발시킨다. 나머지 젓 총알 코드도 마찬가지로 수정한다.
+
+실드 UI를 HUD에 추가하기 위해 다음과 같은 코드를 추가한다.
+
+```gd
+var bar_textures = {
+	"green": preload("res://assets/bar_green_200.png"),
+	"yellow": preload("res://assets/bar_yellow_200.png"),
+	"red": preload("res://assets/bar_red_200.png")
+}
+
+func update_shield(value):
+	shield_bar.texture_progress = bar_textures["green"]
+	if value < 0.4:
+		shield_bar.texture_progress = bar_textures["red"]
+	elif value < 0.7:
+		shield_bar.texture_progress = bar_textures["yellow"]
+	shield_bar.value = value
+```
+
+*preload은 유니티의 Resources.Load와 비슷한 역할을 한다.*
+
+### 사운드 및 비주얼 이펙트
+
+게임에서 중요한 GameExperience를 높이기 위해 사운드와 비주얼 이펙트를 추가한다.
+
+#### 사운드와 음악
+
+Sound를 재생하기 위해선 `AudioStreamPlayer`노드에서 로드해야 한다. 이 노드 2개를 `Player`씬에 추가하고 이름을 `LaserSound`와 `EngieSound`로 변경한다. 각 노드의 이름에 맞는 Stream속성을 추가한다.
+
+```gd
+$LaserSound.play()
+```
+
+#### 파티클
+
+`CPUParticles2D`노드를 추구하고 이를 통해 파티클을 추가할 수 있다.
+
+- 책 내용을 따라하자
+- 개인적으론 유니티보다 더 간단하고 뎌 효과적인 것 같다. (인디게임 한정..?)
+
+### 요약
+
+이번 장에서는 `RigidBody2D`노드의 사용법과 고도에서 물리를 처리하는 기본적인 방법, 컨테이너를 활용한 UI, 사운드와 이펙트 등을 알아본 프로젝트였다.

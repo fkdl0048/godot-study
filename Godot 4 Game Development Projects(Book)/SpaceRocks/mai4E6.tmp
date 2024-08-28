@@ -1,14 +1,10 @@
-[gd_scene load_steps=11 format=3 uid="uid://cp4yl7iv5vb35"]
+[gd_scene load_steps=7 format=3 uid="uid://cp4yl7iv5vb35"]
 
 [ext_resource type="Script" path="res://main.gd" id="1_aqyow"]
 [ext_resource type="Texture2D" uid="uid://ca3jamn2gu1he" path="res://assets/space_background.png" id="1_yleos"]
 [ext_resource type="PackedScene" uid="uid://buuhs7tx0ihao" path="res://Player/player.tscn" id="2_4tckc"]
 [ext_resource type="PackedScene" uid="uid://c5mprc10nnp6r" path="res://Rock/rock.tscn" id="2_5i1tf"]
-[ext_resource type="PackedScene" uid="uid://1sryh75md782" path="res://Enemy/enemy.tscn" id="3_q2dfr"]
 [ext_resource type="PackedScene" uid="uid://brwvnkwvujtq2" path="res://UI/hud.tscn" id="5_3c5yd"]
-[ext_resource type="AudioStream" uid="uid://b6opgkp7l6k23" path="res://assets/sounds/engine.ogg" id="7_wcpsq"]
-[ext_resource type="AudioStream" uid="uid://cqybcrg2iwv7w" path="res://assets/sounds/Funky-Gameplay_Looping.ogg" id="8_ibs3o"]
-[ext_resource type="AudioStream" uid="uid://d2i7exq0slqhv" path="res://assets/sounds/explosion.wav" id="9_qwggl"]
 
 [sub_resource type="Curve2D" id="Curve2D_3vhfw"]
 _data = {
@@ -17,17 +13,14 @@ _data = {
 point_count = 5
 
 [node name="Main" type="Node"]
-process_mode = 3
 script = ExtResource("1_aqyow")
 rock_scene = ExtResource("2_5i1tf")
-enemy_scene = ExtResource("3_q2dfr")
 
 [node name="Background" type="Sprite2D" parent="."]
 texture = ExtResource("1_yleos")
 centered = false
 
 [node name="Player" parent="." instance=ExtResource("2_4tckc")]
-process_mode = 1
 
 [node name="RockPath" type="Path2D" parent="."]
 curve = SubResource("Curve2D_3vhfw")
@@ -37,20 +30,6 @@ position = Vector2(40, 64)
 
 [node name="HUD" parent="." instance=ExtResource("5_3c5yd")]
 
-[node name="EnemyTimer" type="Timer" parent="."]
-one_shot = true
-
-[node name="LevelupSound" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("7_wcpsq")
-
-[node name="Music" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("8_ibs3o")
-
-[node name="ExplosionSound" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("9_qwggl")
-
 [connection signal="dead" from="Player" to="." method="game_over"]
 [connection signal="lives_changed" from="Player" to="HUD" method="update_lives"]
-[connection signal="shield_changed" from="Player" to="HUD" method="update_shield"]
 [connection signal="start_game" from="HUD" to="." method="new_game"]
-[connection signal="timeout" from="EnemyTimer" to="." method="_on_enemy_timer_timeout"]

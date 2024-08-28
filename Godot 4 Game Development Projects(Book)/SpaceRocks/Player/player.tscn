@@ -1,13 +1,26 @@
-[gd_scene load_steps=5 format=3 uid="uid://buuhs7tx0ihao"]
+[gd_scene load_steps=10 format=3 uid="uid://buuhs7tx0ihao"]
 
 [ext_resource type="Texture2D" uid="uid://iqg1aaj5dgt4" path="res://assets/player_ship.png" id="1_4g65l"]
 [ext_resource type="Script" path="res://Player/player.gd" id="1_gum7v"]
 [ext_resource type="PackedScene" uid="uid://d1j4k2fddvvls" path="res://Bullet/bullet.tscn" id="2_5rvwa"]
+[ext_resource type="PackedScene" uid="uid://ckobuqr8fjydp" path="res://Explosion/explosion.tscn" id="4_ebghe"]
+[ext_resource type="AudioStream" uid="uid://dg12hef8m4gtl" path="res://assets/sounds/laser.ogg" id="5_nul86"]
+[ext_resource type="AudioStream" uid="uid://b6opgkp7l6k23" path="res://assets/sounds/engine.ogg" id="6_rlqdj"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_k7chy"]
 radius = 31.0161
 
+[sub_resource type="Curve" id="Curve_rctj2"]
+_data = [Vector2(0, 0.973948), 0.0, 0.0, 0, 0, Vector2(0.997396, 0.153307), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Gradient" id="Gradient_fkfwb"]
+offsets = PackedFloat32Array(0, 0.741573)
+colors = PackedColorArray(0.86489, 0.541574, 0.252241, 1, 1, 0.27451, 0.117647, 1)
+
 [node name="Player" type="RigidBody2D"]
+contact_monitor = true
+max_contacts_reported = 1
 linear_damp = 1.0
 angular_damp = 5.0
 script = ExtResource("1_gum7v")
@@ -28,4 +41,38 @@ position = Vector2(50, 0)
 one_shot = true
 autostart = true
 
+[node name="Explosion" parent="." instance=ExtResource("4_ebghe")]
+visible = false
+
+[node name="InvulnerabilityTimer" type="Timer" parent="."]
+wait_time = 2.0
+one_shot = true
+
+[node name="LaserSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_nul86")
+volume_db = -10.0
+
+[node name="EngineSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_rlqdj")
+volume_db = -10.0
+
+[node name="Exhaust" type="CPUParticles2D" parent="."]
+show_behind_parent = true
+position = Vector2(-28, 0)
+rotation = 3.14159
+amount = 25
+lifetime = 0.1
+local_coords = true
+emission_shape = 3
+emission_rect_extents = Vector2(1, 5)
+spread = 0.0
+gravity = Vector2(0, 0)
+initial_velocity_min = 400.0
+initial_velocity_max = 400.0
+scale_amount_max = 8.0
+scale_amount_curve = SubResource("Curve_rctj2")
+color_ramp = SubResource("Gradient_fkfwb")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]
 [connection signal="timeout" from="GunCooldown" to="." method="_on_gun_cooldown_timeout"]
+[connection signal="timeout" from="InvulnerabilityTimer" to="." method="_on_invulnerability_timer_timeout"]
