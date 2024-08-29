@@ -1,0 +1,58 @@
+[gd_scene load_steps=5 format=3 uid="uid://c4revxjjxqei8"]
+
+[ext_resource type="Script" path="res://UI/hud.gd" id="1_lnurm"]
+[ext_resource type="FontFile" uid="uid://dmn5vabwpaskg" path="res://assets/Kenney Thick.ttf" id="1_wvpkl"]
+[ext_resource type="Texture2D" uid="uid://bfidlktch1dbj" path="res://assets/heart.png" id="2_4ckj0"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_37kpa"]
+font = ExtResource("1_wvpkl")
+font_size = 48
+outline_size = 16
+outline_color = Color(0, 0, 0, 1)
+
+[node name="HUD" type="MarginContainer"]
+anchors_preset = 10
+anchor_right = 1.0
+grow_horizontal = 2
+theme_override_constants/margin_left = 50
+theme_override_constants/margin_top = 50
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+script = ExtResource("1_lnurm")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="Score" type="Label" parent="HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "100"
+label_settings = SubResource("LabelSettings_37kpa")
+
+[node name="LifeCounter" type="HBoxContainer" parent="HBoxContainer"]
+layout_mode = 2
+
+[node name="L1" type="TextureRect" parent="HBoxContainer/LifeCounter"]
+layout_mode = 2
+texture = ExtResource("2_4ckj0")
+stretch_mode = 5
+
+[node name="L2" type="TextureRect" parent="HBoxContainer/LifeCounter"]
+layout_mode = 2
+texture = ExtResource("2_4ckj0")
+stretch_mode = 5
+
+[node name="L3" type="TextureRect" parent="HBoxContainer/LifeCounter"]
+layout_mode = 2
+texture = ExtResource("2_4ckj0")
+stretch_mode = 5
+
+[node name="L4" type="TextureRect" parent="HBoxContainer/LifeCounter"]
+layout_mode = 2
+texture = ExtResource("2_4ckj0")
+stretch_mode = 5
+
+[node name="L5" type="TextureRect" parent="HBoxContainer/LifeCounter"]
+layout_mode = 2
+texture = ExtResource("2_4ckj0")
+stretch_mode = 5
