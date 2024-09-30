@@ -1,5 +1,7 @@
 extends Node3D
 
+@export var next_hole : PackedScene
+
 enum {AIM, SET_POWER, SHOOT, WIN}
 
 @export var power_speed = 100
@@ -51,6 +53,8 @@ func _process(delta: float) -> void:
 			animate_arrow(delta)
 		SET_POWER:
 			animate_power(delta)
+	if state != WIN:
+		$CameraGimbal.position = $Ball.position
 
 func animate_arrow(delta):
 	$Arrow.rotation.y += angle_speed * angle_change * delta

@@ -1,8 +1,15 @@
-[gd_scene load_steps=4 format=3 uid="uid://ca7uenec8g0jn"]
+[gd_scene load_steps=6 format=3 uid="uid://ca7uenec8g0jn"]
 
 [ext_resource type="Script" path="res://ball/ball.gd" id="1_xkve2"]
+[ext_resource type="Texture2D" uid="uid://c47b2ry6mwu1o" path="res://assets/ball_normal_map.png" id="2_2g325"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_p8jnl"]
+normal_enabled = true
+normal_scale = -0.5
+normal_texture = ExtResource("2_2g325")
 
 [sub_resource type="SphereMesh" id="SphereMesh_jn0uh"]
+material = SubResource("StandardMaterial3D_p8jnl")
 radius = 0.05
 height = 0.1
 
