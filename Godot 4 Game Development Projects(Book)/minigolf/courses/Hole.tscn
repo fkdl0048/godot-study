@@ -1,28 +1,28 @@
-[gd_scene load_steps=13 format=3 uid="uid://dwn8tqts10ac3"]
+[gd_scene load_steps=14 format=3 uid="uid://dwn8tqts10ac3"]
 
 [ext_resource type="PackedScene" uid="uid://ca7uenec8g0jn" path="res://ball/ball.tscn" id="1_0pdtu"]
 [ext_resource type="MeshLibrary" uid="uid://g7rie4nh5rkf" path="res://assets/golf_tiles.tres" id="1_3r4ig"]
 [ext_resource type="Script" path="res://courses/hole.gd" id="1_umtb6"]
+[ext_resource type="Script" path="res://courses/directional_light_3d.gd" id="2_iudin"]
 [ext_resource type="PackedScene" uid="uid://yew1nsvt1eli" path="res://UI/arrow.tscn" id="3_gqx8w"]
 [ext_resource type="PackedScene" uid="uid://bjduwpnhv3svj" path="res://UI/ui.tscn" id="4_qpnn8"]
 [ext_resource type="PackedScene" uid="uid://cfrh1fdbfn6cd" path="res://Camera/camera_gimbal.tscn" id="6_4v5wh"]
 
-[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ntmjp"]
-bounce = 0.25
-
-[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_mkqy7"]
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_pt55g"]
 sky_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
 ground_horizon_color = Color(0.64625, 0.65575, 0.67075, 1)
 
-[sub_resource type="Sky" id="Sky_pnt46"]
-sky_material = SubResource("ProceduralSkyMaterial_mkqy7")
+[sub_resource type="Sky" id="Sky_bw115"]
+sky_material = SubResource("ProceduralSkyMaterial_pt55g")
 
-[sub_resource type="Environment" id="Environment_ttb8t"]
+[sub_resource type="Environment" id="Environment_asvyh"]
 background_mode = 2
-sky = SubResource("Sky_pnt46")
-ambient_light_color = Color(1, 1, 1, 1)
+sky = SubResource("Sky_bw115")
 tonemap_mode = 2
 glow_enabled = true
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_ntmjp"]
+bounce = 0.25
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_srqck"]
 rough = true
@@ -35,6 +35,14 @@ radius = 0.08
 [node name="Hole" type="Node3D"]
 script = ExtResource("1_umtb6")
 
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_asvyh")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.64145, -0.381261, 0.66572, 0, 0.867765, 0.496974, -0.767165, 0.318784, -0.556628, 1, 0, 0)
+shadow_enabled = true
+script = ExtResource("2_iudin")
+
 [node name="CameraGimbal" parent="." instance=ExtResource("6_4v5wh")]
 
 [node name="Ball" parent="." instance=ExtResource("1_0pdtu")]
@@ -44,20 +52,12 @@ continuous_cd = true
 linear_damp = 0.5
 angular_damp = 1.0
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
-environment = SubResource("Environment_ttb8t")
-
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
-transform = Transform3D(-0.866025, -0.433013, 0.25, 0, 0.5, 0.866025, -0.5, 0.75, -0.433013, 0, 0, 0)
-shadow_enabled = true
-directional_shadow_max_distance = 40.0
-
 [node name="GridMap" type="GridMap" parent="."]
 mesh_library = ExtResource("1_3r4ig")
 physics_material = SubResource("PhysicsMaterial_srqck")
 cell_size = Vector3(1, 1, 1)
 data = {
-"cells": PackedInt32Array(0, 65532, 655382, 0, 65533, 655384, 0, 65534, 655384, 0, 65535, 655384, 0, 0, 655375, 1, 0, 1048585, 0, 1, 9, 65535, 0, 1441816, 65534, 0, 1441793)
+"cells": PackedInt32Array(0, 65532, 655382, 0, 65535, 655384, 0, 0, 655375, 1, 0, 1048585, 0, 1, 9, 65535, 0, 1441816, 65534, 0, 1441793, 0, 65534, 4, 0, 65533, 655384)
 }
 metadata/_editor_floor_ = Vector3(0, 0, 0)
 
